@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using SalesDashboard.Api.Data;
 using Serilog;
 
 // Bootstrap logger: captures startup failures before the host is built.
@@ -14,10 +18,27 @@ try
         .ReadFrom.Services(services)
         .WriteTo.Console());
 
-    // Read but not used in T1 — proves configuration wiring only.
-    _ = builder.Configuration.GetConnectionString("Sales");
+    // One NpgsqlDataSource for the whole app (shared by EF Core now and Dapper later, D10).
+    // Registered manually to avoid pulling Npgsql.DependencyInjection; built lazily on first resolve,
+    // so an empty connection string does not fail startup for endpoints that never touch the database.
+    builder.Services.AddSingleton(sp =>
+    {
+        var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("Sales");
+        return new NpgsqlDataSourceBuilder(connectionString).Build();
+    });
 
-    builder.Services.AddHealthChecks();
+    builder.Services.AddDbContext<SalesDbContext>((sp, options) => options
+        .UseNpgsql(sp.GetRequiredService<NpgsqlDataSource>())
+        .UseSnakeCaseNamingConvention());
+
+    builder.Services.AddOptions<DatabaseOptions>()
+        .BindConfiguration(DatabaseOptions.SectionName)
+        .ValidateOnStart();
+
+    builder.Services.AddHostedService<SalesDbInitializer>();
+
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<SalesDbContext>(tags: ["ready"]);
 
     var app = builder.Build();
 
@@ -25,6 +46,12 @@ try
 
     // Liveness: no dependency checks, returns 200 when the process is up.
     app.MapHealthChecks("/health/live");
+
+    // Readiness: only checks tagged "ready" (the database is reachable).
+    app.MapHealthChecks("/health/ready", new HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready"),
+    });
 
     await app.RunAsync().ConfigureAwait(false);
 }

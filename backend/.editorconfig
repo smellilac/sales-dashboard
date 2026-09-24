@@ -16,3 +16,9 @@ indent_size = 2
 # Generated EF Core migrations: excluded from analyzers/style enforcement (PKG).
 [**/Migrations/**]
 generated_code = true
+
+# Test project: xUnit v3 discourages ConfigureAwait(false) in test code (it interferes with the
+# ambient TestContext), so disable the analyzer that asks for it here. xUnit's own analyzer already
+# fires when ConfigureAwait is misused in tests.
+[tests/**.cs]
+dotnet_diagnostic.MA0004.severity = none
