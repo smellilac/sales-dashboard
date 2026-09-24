@@ -88,6 +88,7 @@ Timebox — 8 часов. Запуск одной командой: `docker comp
 | ID | Решение |
 |---|---|
 | C1 | Миграции — EF Core migrations (исключение из правила «Liquibase для всего DDL») |
+| REPO | Monorepo `sales-dashboard`: `backend/`, `frontend/`, `docker-compose.yml` (`name: sales-dashboard`), `Claude.md`, `docs/` в корне. |
 | C3 | .NET 10 (LTS) |
 | DB-INIT | `SalesDbInitializer` (`IHostedService`, async `StartAsync`) применяет миграции и seed при старте API. Включается флагом `Database:ApplyMigrationsOnStartup`, флаг включён только в docker-compose. Seed на C#. |
 | DB-COMPOSE | PostgreSQL — сервис в `docker-compose.yml` проекта, с healthcheck. API стартует после `service_healthy`. |
@@ -103,7 +104,8 @@ Timebox — 8 часов. Запуск одной командой: `docker comp
 
 ## Seed (settled, D13)
 
-- Bogus, фиксированный `Randomizer.Seed`; даты — смещения от дня запуска.
+- Bogus, локальный `Randomizer(20260924)` (не глобальный `Randomizer.Seed`); даты — смещения от дня запуска.
+- Id детерминированные: `SeedGuid` строит UUID v7 из seeded-генератора (timestamp продажи = `SoldAt`).
 - 20 менеджеров, 80 клиентов, 6 категорий, ~40 товаров, ~4 000 сделок за 12 месяцев, 1–4 позиции в сделке.
 - Профили: 3 сильных, 3 слабых, 2 «крупные сделки», 2 «много мелких», 1 в отпуске 6 недель, 1 неактивный (уволен 3 месяца назад), остальные средние.
 - Сезонность: пик март–май и декабрь, спад в январе.

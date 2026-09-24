@@ -1,9 +1,13 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Scalar.AspNetCore;
 using SalesDashboard.Api.Data;
 using SalesDashboard.Api.Data.Seed;
+using SalesDashboard.Api.Features;
 using SalesDashboard.Api.Shared;
+using SalesDashboard.Api.Shared.Errors;
+using SalesDashboard.Api.Shared.Json;
 using Serilog;
 
 // Bootstrap logger: captures startup failures before the host is built.
@@ -54,7 +58,20 @@ try
     // Applies migrations then seeds at startup when enabled (DB-INIT). The only place the API runs DDL.
     builder.Services.AddHostedService<SalesDbInitializer>();
 
+    // Source-generated JSON contracts first in the chain (D6: nulls written, enums as strings).
+    builder.Services.ConfigureHttpJsonOptions(options =>
+        options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default));
+
+    // Expected errors -> ProblemDetails with traceId (D12); unhandled exceptions -> GlobalExceptionHandler.
+    builder.Services.AddApiProblemDetails();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+    // OpenAPI document + Scalar UI (OPENAPI). Document is also emitted to backend/openapi/ at build time.
+    builder.Services.AddOpenApi();
+
     var app = builder.Build();
+
+    app.UseExceptionHandler();
 
     app.UseSerilogRequestLogging();
 
@@ -66,6 +83,12 @@ try
     {
         Predicate = check => check.Tags.Contains("ready"),
     });
+
+    // OpenAPI JSON at /openapi/v1.json and the Scalar reference UI at /scalar (no auth, D8/OPENAPI).
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+
+    app.MapDashboard();
 
     await app.RunAsync().ConfigureAwait(false);
 }

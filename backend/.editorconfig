@@ -22,3 +22,6 @@ generated_code = true
 # fires when ConfigureAwait is misused in tests.
 [tests/**.cs]
 dotnet_diagnostic.MA0004.severity = none
+# Asserting on framework-provided string dictionaries (e.g. ValidationProblemDetails.Errors) trips
+# MA0002, whose suggested comparer overload does not exist for these lookups. Off in tests only.
+dotnet_diagnostic.MA0002.severity = none
