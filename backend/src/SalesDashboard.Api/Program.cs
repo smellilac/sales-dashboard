@@ -46,7 +46,7 @@ try
     if (databaseOptions.ApplyMigrationsOnStartup)
     {
         var scope = app.Services.CreateAsyncScope();
-        await using (scope)
+        await using (scope.ConfigureAwait(false))
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<SalesDbContext>();
             await dbContext.Database.MigrateAsync(app.Lifetime.ApplicationStopping).ConfigureAwait(false);
