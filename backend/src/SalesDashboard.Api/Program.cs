@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Npgsql;
 using SalesDashboard.Api.Data;
+using SalesDashboard.Api.Data.Seed;
+using SalesDashboard.Api.Shared;
 using Serilog;
 
 // Bootstrap logger: captures startup failures before the host is built.
@@ -36,22 +37,24 @@ try
         .BindConfiguration(DatabaseOptions.SectionName)
         .ValidateOnStart();
 
+    builder.Services.AddOptions<ReportingOptions>()
+        .BindConfiguration(ReportingOptions.SectionName)
+        .Validate(
+            static options => TimeZoneInfo.TryFindSystemTimeZoneById(options.TimeZone, out _),
+            "Reporting:TimeZone must be a time zone id resolvable on this system.")
+        .ValidateOnStart();
+
+    // TimeProvider (D4): the seed generator reads "now" through it; tests inject FakeTimeProvider.
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddScoped<SalesDataSeeder>();
+
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<SalesDbContext>(tags: ["ready"]);
 
-    var app = builder.Build();
+    // Applies migrations then seeds at startup when enabled (DB-INIT). The only place the API runs DDL.
+    builder.Services.AddHostedService<SalesDbInitializer>();
 
-    // Apply pending migrations at startup when enabled (DB-INIT). This is the only place the API runs DDL.
-    var databaseOptions = app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-    if (databaseOptions.ApplyMigrationsOnStartup)
-    {
-        var scope = app.Services.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<SalesDbContext>();
-            await dbContext.Database.MigrateAsync(app.Lifetime.ApplicationStopping).ConfigureAwait(false);
-        }
-    }
+    var app = builder.Build();
 
     app.UseSerilogRequestLogging();
 

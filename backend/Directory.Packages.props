@@ -12,6 +12,7 @@
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
     <!-- Task pinned 1.26.0, but xunit.v3 4.0.1 requires >= 2.1.0 (NU1605). Bumped to 2.1.0. -->
     <PackageVersion Include="xunit.analyzers" Version="2.1.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
   </ItemGroup>
 
   <ItemGroup>
