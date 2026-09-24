@@ -2,8 +2,12 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SalesDashboard.Api.Data.Entities;
+using SalesDashboard.Api.Features.Categories;
 using SalesDashboard.Api.Features.Kpi;
 using SalesDashboard.Api.Features.ManagerRanking;
+using SalesDashboard.Api.Features.RecentSales;
+using SalesDashboard.Api.Features.Timeseries;
+using SalesDashboard.Api.Features.TopProducts;
 using SalesDashboard.Api.Shared.Metrics;
 using SalesDashboard.Api.Shared.Period;
 
@@ -24,6 +28,10 @@ namespace SalesDashboard.Api.Shared.Json;
 [JsonSerializable(typeof(PeriodDto))]
 [JsonSerializable(typeof(KpiResponse))]
 [JsonSerializable(typeof(RankingResponse))]
+[JsonSerializable(typeof(TimeseriesResponse))]
+[JsonSerializable(typeof(CategoriesResponse))]
+[JsonSerializable(typeof(TopProductsResponse))]
+[JsonSerializable(typeof(RecentSalesResponse))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(HttpValidationProblemDetails))]
 [JsonSerializable(typeof(SaleStatus))]

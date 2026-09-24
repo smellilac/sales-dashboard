@@ -1,5 +1,9 @@
+using SalesDashboard.Api.Features.Categories;
 using SalesDashboard.Api.Features.Kpi;
 using SalesDashboard.Api.Features.ManagerRanking;
+using SalesDashboard.Api.Features.RecentSales;
+using SalesDashboard.Api.Features.Timeseries;
+using SalesDashboard.Api.Features.TopProducts;
 
 namespace SalesDashboard.Api.Features;
 
@@ -17,6 +21,10 @@ public static class DashboardApi
 
         group.MapKpis();
         group.MapManagerRanking();
+        group.MapTimeseries();
+        group.MapCategories();
+        group.MapTopProducts();
+        group.MapRecentSales();
 
         return group;
     }

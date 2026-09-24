@@ -15,7 +15,18 @@ internal static class DashboardTestHost
     /// <summary>Business time zone used by the API in tests and by the Moscow-wall-clock helpers (D4).</summary>
     public static readonly TimeZoneInfo Moscow = TimeZoneInfo.FindSystemTimeZoneById("Europe/Moscow");
 
-    public static async Task<DashboardApp> StartAsync(PostgresFixture postgres, Func<TestDataBuilder, Task> seed)
+    public static Task<DashboardApp> StartAsync(PostgresFixture postgres, Func<TestDataBuilder, Task> seed)
+    {
+        ArgumentNullException.ThrowIfNull(seed);
+
+        return StartRawAsync(postgres, db => seed(new TestDataBuilder(db)));
+    }
+
+    /// <summary>
+    /// Like <see cref="StartAsync"/> but hands the raw <see cref="SalesDbContext"/> to the seeder — for tests
+    /// that insert generated seed data directly (CONSISTENCY-TEST) rather than the hand-built builder.
+    /// </summary>
+    public static async Task<DashboardApp> StartRawAsync(PostgresFixture postgres, Func<SalesDbContext, Task> seed)
     {
         ArgumentNullException.ThrowIfNull(postgres);
         ArgumentNullException.ThrowIfNull(seed);
@@ -25,7 +36,7 @@ internal static class DashboardTestHost
         await using (var db = PostgresFixture.CreateContext(connectionString))
         {
             await db.Database.MigrateAsync(TestContext.Current.CancellationToken);
-            await seed(new TestDataBuilder(db));
+            await seed(db);
         }
 
         var factory = new WebApplicationFactory<Program>()
