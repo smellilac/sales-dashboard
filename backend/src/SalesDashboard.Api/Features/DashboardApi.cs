@@ -1,3 +1,6 @@
+using SalesDashboard.Api.Features.Kpi;
+using SalesDashboard.Api.Features.ManagerRanking;
+
 namespace SalesDashboard.Api.Features;
 
 /// <summary>
@@ -12,8 +15,8 @@ public static class DashboardApi
 
         var group = app.MapGroup("/api/dashboard").WithTags("Dashboard");
 
-        // T5–T6: each slice registers itself here through its static Map method, taking this group.
-        // No slices exist yet in T4.
+        group.MapKpis();
+        group.MapManagerRanking();
 
         return group;
     }

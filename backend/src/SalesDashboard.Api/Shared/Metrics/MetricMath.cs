@@ -17,6 +17,11 @@ public static class MetricMath
     public static decimal? AverageCheck(decimal revenue, int count) =>
         count == 0 ? null : revenue / count;
 
+    /// <summary><paramref name="part"/> as a share of <paramref name="whole"/>, e.g. the refunds rate (D1).</summary>
+    /// <returns><see langword="null"/> when <paramref name="whole"/> is 0 (D6).</returns>
+    public static decimal? Share(decimal part, decimal whole) =>
+        whole == 0m ? null : part / whole;
+
     /// <summary>Relative change from <paramref name="previous"/> to <paramref name="current"/> (API-KPI).</summary>
     /// <returns><see langword="null"/> when <paramref name="previous"/> is 0 (D6).</returns>
     public static decimal? RelativeChange(decimal current, decimal previous) =>
