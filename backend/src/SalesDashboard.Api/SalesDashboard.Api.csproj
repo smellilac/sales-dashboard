@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>SalesDashboard.Api</RootNamespace>
+    <AssemblyName>SalesDashboard.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SalesDashboard.Api.Tests" />
+  </ItemGroup>
+
+</Project>

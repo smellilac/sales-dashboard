@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+
+# Build / test output
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.trx
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (frontend, added later)
+node_modules/

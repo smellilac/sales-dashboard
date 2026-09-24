@@ -1,0 +1,8 @@
+# Build context is ./backend (see docker-compose.yml).
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+Dockerfile
+.dockerignore
