@@ -4,6 +4,13 @@
     <RootNamespace>SalesDashboard.Api</RootNamespace>
     <AssemblyName>SalesDashboard.Api</AssemblyName>
     <UserSecretsId>eb4ba70d-c5d2-4d84-acd9-f5a898c614d3</UserSecretsId>
+    <!-- TODO(T4): source-generated JSON (AppJsonSerializerContext) is registered first in the resolver
+         chain, but reflection stays enabled as a fallback for framework types (ProblemDetails.Extensions).
+         Revisit to turn this off once every serialized contract is covered by the source-gen context. -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- OpenAPI document generated at build time and committed (OPENAPI). Output to backend/openapi/. -->
+    <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../openapi</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +20,13 @@
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="Bogus" />
+    <PackageReference Include="ErrorOr" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
