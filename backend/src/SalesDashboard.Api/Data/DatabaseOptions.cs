@@ -6,7 +6,7 @@ public sealed class DatabaseOptions
     public const string SectionName = "Database";
 
     /// <summary>
-    /// When true, <see cref="SalesDbInitializer"/> applies pending migrations at startup.
+    /// When true, the application applies pending migrations at startup (in Program.cs).
     /// Enabled only in docker-compose; off everywhere else so app code does not run DDL by default.
     /// </summary>
     public bool ApplyMigrationsOnStartup { get; init; }

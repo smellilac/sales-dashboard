@@ -5,7 +5,7 @@ namespace SalesDashboard.Api.Data;
 
 /// <summary>
 /// EF Core context for the sales domain. Read-only at runtime (READ-ONLY invariant); the only writes are
-/// migrations and seed via <see cref="SalesDbInitializer"/>.
+/// migrations (applied at startup in Program.cs) and seed.
 /// </summary>
 public sealed class SalesDbContext(DbContextOptions<SalesDbContext> options) : DbContext(options)
 {

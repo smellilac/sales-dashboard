@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using SalesDashboard.Api.Data;
 using Serilog;
@@ -35,12 +36,22 @@ try
         .BindConfiguration(DatabaseOptions.SectionName)
         .ValidateOnStart();
 
-    builder.Services.AddHostedService<SalesDbInitializer>();
-
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<SalesDbContext>(tags: ["ready"]);
 
     var app = builder.Build();
+
+    // Apply pending migrations at startup when enabled (DB-INIT). This is the only place the API runs DDL.
+    var databaseOptions = app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+    if (databaseOptions.ApplyMigrationsOnStartup)
+    {
+        var scope = app.Services.CreateAsyncScope();
+        await using (scope)
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<SalesDbContext>();
+            await dbContext.Database.MigrateAsync(app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+        }
+    }
 
     app.UseSerilogRequestLogging();
 

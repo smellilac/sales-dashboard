@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <RootNamespace>SalesDashboard.Api</RootNamespace>
     <AssemblyName>SalesDashboard.Api</AssemblyName>
+    <UserSecretsId>eb4ba70d-c5d2-4d84-acd9-f5a898c614d3</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
