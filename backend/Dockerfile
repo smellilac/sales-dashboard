@@ -21,6 +21,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app ./
 
+# curl is needed for the compose healthcheck on /health/ready; the aspnet image ships without it.
+# Installed as root before dropping to the non-root user.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as the non-root user provided by the base image.
 USER $APP_UID
 
