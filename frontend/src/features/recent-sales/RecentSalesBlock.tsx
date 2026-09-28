@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react'
+import { motion } from 'motion/react'
 
 import { useRecentSales } from '@/api/queries/useRecentSales'
 import type { components } from '@/api/schema'
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatDateTime, formatMoney } from '@/lib/format'
+import { rowEnter } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { ActivePeriod } from '@/period/types'
 
@@ -27,6 +29,9 @@ import {
 } from './status'
 
 type RecentSaleRow = components['schemas']['RecentSaleRow']
+
+/** Sale row; newly-mounted rows (a fresh "Показать ещё" page) fade in, existing rows stay put (T9). */
+const MotionRow = motion.create(TableRow)
 
 /** Recent sales feed (RECENT-SALES, D2): all statuses, keyset pagination via "Показать ещё". */
 export function RecentSalesBlock({
@@ -107,7 +112,7 @@ function SaleRow({ row }: { row: RecentSaleRow }) {
   const greyAmount = !countsTowardTotals(status)
 
   return (
-    <TableRow>
+    <MotionRow variants={rowEnter} initial="hidden" animate="show">
       <TableCell className="tabular-nums">{formatDateTime(row.soldAt)}</TableCell>
       <TableCell>{row.managerName}</TableCell>
       <TableCell>{row.customerCompany}</TableCell>
@@ -123,7 +128,7 @@ function SaleRow({ row }: { row: RecentSaleRow }) {
       <TableCell className={cn('text-right tabular-nums', greyAmount && 'text-muted-foreground')}>
         {formatMoney(row.grossProfit)}
       </TableCell>
-    </TableRow>
+    </MotionRow>
   )
 }
 

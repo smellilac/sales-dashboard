@@ -16,6 +16,7 @@ import {
   formatCount,
   formatMoney,
 } from '@/lib/format'
+import { CHART_DURATION } from '@/lib/motion'
 
 import type { TimeseriesMode } from './mode'
 
@@ -72,6 +73,7 @@ export function TimeseriesChart({ data, mode }: TimeseriesChartProps) {
               fill={REVENUE_COLOR}
               fillOpacity={0.15}
               strokeWidth={2}
+              animationDuration={CHART_DURATION}
             />
             <Area
               type="monotone"
@@ -81,10 +83,17 @@ export function TimeseriesChart({ data, mode }: TimeseriesChartProps) {
               fill={PROFIT_COLOR}
               fillOpacity={0.15}
               strokeWidth={2}
+              animationDuration={CHART_DURATION}
             />
           </>
         ) : (
-          <Bar dataKey="salesCount" name="Продажи" fill={SALES_COLOR} radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="salesCount"
+            name="Продажи"
+            fill={SALES_COLOR}
+            radius={[4, 4, 0, 0]}
+            animationDuration={CHART_DURATION}
+          />
         )}
       </ComposedChart>
     </ResponsiveContainer>

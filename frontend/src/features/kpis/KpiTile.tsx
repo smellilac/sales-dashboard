@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface KpiTileProps {
   title: string
-  /** Formatted main value; already «—» when the metric is null (D6). */
-  value: string
+  /** Main value node — usually an AnimatedNumber; renders «—» when the metric is null (D6). */
+  value: ReactNode
   /** Change row (ChangeIndicator) or an extra caption. */
   footer: ReactNode
 }

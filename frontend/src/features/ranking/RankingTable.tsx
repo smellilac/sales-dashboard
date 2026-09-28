@@ -1,3 +1,5 @@
+import { motion } from 'motion/react'
+
 import type { components } from '@/api/schema'
 import { Avatar } from '@/components/Avatar'
 import { ChangeIndicator } from '@/components/ChangeIndicator'
@@ -11,9 +13,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatCount, formatMoney, formatPercent } from '@/lib/format'
+import { layoutTransition } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type RankingRow = components['schemas']['RankingRow']
+
+/** Ranking row that animates to its new position when the metric/period reorders the list (T9). */
+const MotionRow = motion.create(TableRow)
 
 /**
  * Manager ranking table (D7): sports numbering (equal ranks share a number), top-3 highlighted,
@@ -40,8 +46,10 @@ export function RankingTable({ items }: { items: RankingRow[] }) {
           const rank = row.rank == null ? null : Number(row.rank)
           const isTop = rank != null && rank <= 3
           return (
-            <TableRow
+            <MotionRow
               key={row.managerId}
+              layout
+              transition={layoutTransition}
               className={cn(!row.hasSales && 'text-muted-foreground')}
             >
               <TableCell>
@@ -97,7 +105,7 @@ export function RankingTable({ items }: { items: RankingRow[] }) {
                   <ChangeIndicator value={row.metricChange} />
                 </span>
               </TableCell>
-            </TableRow>
+            </MotionRow>
           )
         })}
       </TableBody>
