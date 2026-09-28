@@ -1,3 +1,6 @@
+# Compose project name is fixed so it does not depend on the clone folder name (REPO).
+name: sales-dashboard
+
 services:
   postgres:
     image: postgres:17
@@ -27,6 +30,24 @@ services:
     environment:
       ConnectionStrings__Sales: "Host=postgres;Port=5432;Database=sales;Username=sales;Password=sales"
       Database__ApplyMigrationsOnStartup: "true"
+    healthcheck:
+      # curl is installed in the runtime image (see backend/Dockerfile). Readiness = DB reachable.
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      # Generous: the API applies migrations and seeds on first start (DB-INIT).
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:80"
 
 volumes:
   postgres-data:
