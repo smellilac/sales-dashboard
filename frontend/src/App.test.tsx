@@ -15,6 +15,7 @@ vi.mock('recharts', () => {
     ResponsiveContainer: Stub,
     ComposedChart: Stub,
     Area: Stub,
+    Line: Stub,
     Bar: Stub,
     XAxis: Stub,
     YAxis: Stub,
@@ -46,7 +47,7 @@ import {
   timeseriesEmptyResponse,
   topProductsEmptyResponse,
 } from '@/test/fixtures'
-import { lastRequest } from '@/test/handlers'
+import { lastRequest, requests } from '@/test/handlers'
 import { renderWithProviders } from '@/test/renderWithProviders'
 import { server } from '@/test/server'
 
@@ -120,12 +121,26 @@ describe('App — period selection (T9 #1, #2)', () => {
   })
 })
 
+describe('App — API base path', () => {
+  it('sends the KPI request once at the exact /api path, never a doubled /api/api', async () => {
+    renderWithProviders(<Dashboard />)
+
+    // The dashboard has issued its KPI request.
+    await waitFor(() => expect(lastRequest(KPI_PATH)).toBeDefined())
+
+    // Exactly the schema path — a doubled base URL would produce /api/api/dashboard/kpis, which
+    // no handler matches (onUnhandledRequest: 'error') and which this assertion would catch anyway.
+    expect(requests.filter((r) => r.path === KPI_PATH)).toHaveLength(1)
+    expect(requests.some((r) => r.path.startsWith('/api/api'))).toBe(false)
+  })
+})
+
 describe('App — loading and refetch states (T9 #5, #6)', () => {
   it('shows a skeleton on first load, then the data', async () => {
     // Hold the ranking request open so its block stays in the skeleton state while we assert.
     const gate = deferred()
     server.use(
-      http.get('*/api/dashboard/managers/ranking', async () => {
+      http.get('/api/dashboard/managers/ranking', async () => {
         await gate.promise
         return HttpResponse.json(rankingResponse)
       }),
@@ -150,7 +165,7 @@ describe('App — loading and refetch states (T9 #5, #6)', () => {
     // Hold the ranking refetch triggered by the period change so we can observe the transition.
     const gate = deferred()
     server.use(
-      http.get('*/api/dashboard/managers/ranking', async () => {
+      http.get('/api/dashboard/managers/ranking', async () => {
         await gate.promise
         return HttpResponse.json(rankingResponse)
       }),
@@ -177,7 +192,7 @@ describe('App — loading and refetch states (T9 #5, #6)', () => {
 describe('App — per-block error isolation (T9 #7)', () => {
   it('shows an error with retry in only the failed block; retry recovers it', async () => {
     server.use(
-      http.get('*/api/dashboard/managers/ranking', () =>
+      http.get('/api/dashboard/managers/ranking', () =>
         HttpResponse.json(problemDetails, { status: 500 }),
       ),
     )
@@ -194,7 +209,7 @@ describe('App — per-block error isolation (T9 #7)', () => {
 
     // Fix the endpoint and retry → the block recovers.
     server.use(
-      http.get('*/api/dashboard/managers/ranking', () => HttpResponse.json(rankingResponse)),
+      http.get('/api/dashboard/managers/ranking', () => HttpResponse.json(rankingResponse)),
     )
     await user.click(screen.getByRole('button', { name: 'Повторить' }))
 
@@ -206,16 +221,16 @@ describe('App — per-block error isolation (T9 #7)', () => {
 describe('App — empty period (T9 #8)', () => {
   it('renders «—», «нет данных для сравнения» and per-block empty messages', async () => {
     server.use(
-      http.get('*/api/dashboard/kpis', () => HttpResponse.json(kpiEmptyResponse)),
-      http.get('*/api/dashboard/managers/ranking', () =>
+      http.get('/api/dashboard/kpis', () => HttpResponse.json(kpiEmptyResponse)),
+      http.get('/api/dashboard/managers/ranking', () =>
         HttpResponse.json(rankingEmptyResponse),
       ),
-      http.get('*/api/dashboard/timeseries', () => HttpResponse.json(timeseriesEmptyResponse)),
-      http.get('*/api/dashboard/categories', () => HttpResponse.json(categoriesEmptyResponse)),
-      http.get('*/api/dashboard/products/top', () =>
+      http.get('/api/dashboard/timeseries', () => HttpResponse.json(timeseriesEmptyResponse)),
+      http.get('/api/dashboard/categories', () => HttpResponse.json(categoriesEmptyResponse)),
+      http.get('/api/dashboard/products/top', () =>
         HttpResponse.json(topProductsEmptyResponse),
       ),
-      http.get('*/api/dashboard/sales/recent', () =>
+      http.get('/api/dashboard/sales/recent', () =>
         HttpResponse.json(recentSalesEmptyResponse),
       ),
     )

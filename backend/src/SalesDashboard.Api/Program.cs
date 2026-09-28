@@ -1,3 +1,4 @@
+using Dapper;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -6,6 +7,7 @@ using SalesDashboard.Api.Data;
 using SalesDashboard.Api.Data.Seed;
 using SalesDashboard.Api.Features;
 using SalesDashboard.Api.Shared;
+using SalesDashboard.Api.Shared.Data;
 using SalesDashboard.Api.Shared.Errors;
 using SalesDashboard.Api.Shared.Json;
 using Serilog;
@@ -17,6 +19,10 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
+    // Dapper does not support DateOnly parameters out of the box; register the handler once, before any query
+    // runs, so timeseries (D10) can bind and read DateOnly for both parameters and results.
+    SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -75,8 +81,12 @@ try
 
     app.UseSerilogRequestLogging();
 
-    // Liveness: no dependency checks, returns 200 when the process is up.
-    app.MapHealthChecks("/health/live");
+    // Liveness: no dependency checks, returns 200 when the process is up. An empty predicate runs no checks,
+    // so the DbContext readiness check does not leak in and fail liveness when the database is unreachable.
+    app.MapHealthChecks("/health/live", new HealthCheckOptions
+    {
+        Predicate = _ => false,
+    });
 
     // Readiness: only checks tagged "ready" (the database is reachable).
     app.MapHealthChecks("/health/ready", new HealthCheckOptions

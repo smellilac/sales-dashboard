@@ -1,15 +1,13 @@
 import '@testing-library/jest-dom/vitest'
 
-import { afterAll, afterEach, vi } from 'vitest'
+import { afterAll, afterEach } from 'vitest'
 import { MotionGlobalConfig } from 'motion/react'
 
 import { resetRequests } from './handlers'
 import { server } from './server'
 
-// node's fetch (unlike the browser) can't resolve a relative URL, so point the API client at an
-// absolute origin. The path shape (incl. the /api prefix) is unchanged; MSW matches it by suffix.
-vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000/api')
-
+// The API client derives its base from window.location.origin (jsdom serves an absolute origin,
+// so node's fetch can resolve it) and the schema paths carry the /api prefix — no env override.
 // Start MSW here at module top-level — before any test file imports the API client. openapi-fetch
 // captures globalThis.fetch when the client is created, so the interceptor must already be in place.
 server.listen({ onUnhandledRequest: 'error' })

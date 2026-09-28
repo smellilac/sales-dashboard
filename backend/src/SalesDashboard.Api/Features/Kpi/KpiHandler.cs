@@ -76,7 +76,7 @@ public static class KpiHandler
         var saleMoney =
             from i in db.SaleItems.AsNoTracking()
             group i by i.SaleId into g
-            select new { SaleId = g.Key, Revenue = g.Sum(x => x.LineRevenue) };
+            select new { SaleId = g.Key, Revenue = g.Sum(x => (decimal?)x.LineRevenue) ?? 0m };
 
         var refundLines =
             from s in db.Sales.AsNoTracking()
@@ -84,12 +84,13 @@ public static class KpiHandler
             join money in saleMoney on s.Id equals money.SaleId
             select new { IsCurrent = s.SoldAt >= split, money.Revenue };
 
+        // Filtered SUMs are coalesced so a period with refunds on only one side yields 0m, not a SQL NULL.
         var totals = await refundLines
             .GroupBy(_ => 1)
             .Select(g => new
             {
-                Current = g.Sum(x => x.IsCurrent ? x.Revenue : 0m),
-                Previous = g.Sum(x => x.IsCurrent ? 0m : x.Revenue),
+                Current = g.Where(x => x.IsCurrent).Sum(x => (decimal?)x.Revenue) ?? 0m,
+                Previous = g.Where(x => !x.IsCurrent).Sum(x => (decimal?)x.Revenue) ?? 0m,
             })
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);

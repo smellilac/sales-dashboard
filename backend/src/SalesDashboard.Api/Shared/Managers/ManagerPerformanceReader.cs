@@ -27,11 +27,12 @@ public static class ManagerPerformanceReader
         var spanEnd = period.Current.EndUtc;
         var split = period.Current.StartUtc;
 
-        // Per-sale money, summed in SQL from the generated columns (one row per sale).
+        // Per-sale money from the generated columns (one row per sale); SUM is coalesced so a SQL NULL (empty
+        // set once EF flattens the join) never lands in a non-nullable decimal.
         var saleMoney =
             from i in db.SaleItems.AsNoTracking()
             group i by i.SaleId into g
-            select new { SaleId = g.Key, Revenue = g.Sum(x => x.LineRevenue), Cost = g.Sum(x => x.LineCost) };
+            select new { SaleId = g.Key, Revenue = g.Sum(x => (decimal?)x.LineRevenue) ?? 0m, Cost = g.Sum(x => (decimal?)x.LineCost) ?? 0m };
 
         // Paid sales in the combined span, tagged with the period they fall in.
         // Inner join is safe: every sale has at least one line (D13).
@@ -47,12 +48,14 @@ public static class ManagerPerformanceReader
             select new
             {
                 ManagerId = g.Key,
-                CurrentRevenue = g.Sum(x => x.IsCurrent ? x.Revenue : 0m),
-                CurrentCost = g.Sum(x => x.IsCurrent ? x.Cost : 0m),
-                CurrentSalesCount = g.Sum(x => x.IsCurrent ? 1 : 0),
-                PreviousRevenue = g.Sum(x => x.IsCurrent ? 0m : x.Revenue),
-                PreviousCost = g.Sum(x => x.IsCurrent ? 0m : x.Cost),
-                PreviousSalesCount = g.Sum(x => x.IsCurrent ? 0 : 1),
+                // Nullable on purpose: the LEFT JOIN below has no match for managers with no sales, so every
+                // aggregate arrives as SQL NULL and is coalesced there. Filtered sums cover the other-period side.
+                CurrentRevenue = g.Where(x => x.IsCurrent).Sum(x => (decimal?)x.Revenue),
+                CurrentCost = g.Where(x => x.IsCurrent).Sum(x => (decimal?)x.Cost),
+                CurrentSalesCount = (int?)g.Count(x => x.IsCurrent),
+                PreviousRevenue = g.Where(x => !x.IsCurrent).Sum(x => (decimal?)x.Revenue),
+                PreviousCost = g.Where(x => !x.IsCurrent).Sum(x => (decimal?)x.Cost),
+                PreviousSalesCount = (int?)g.Count(x => !x.IsCurrent),
             };
 
         var query =
@@ -66,12 +69,12 @@ public static class ManagerPerformanceReader
                 LastName = m.LastName,
                 Team = m.Team,
                 IsActive = m.IsActive,
-                CurrentRevenue = a == null ? 0m : a.CurrentRevenue,
-                CurrentCost = a == null ? 0m : a.CurrentCost,
-                CurrentSalesCount = a == null ? 0 : a.CurrentSalesCount,
-                PreviousRevenue = a == null ? 0m : a.PreviousRevenue,
-                PreviousCost = a == null ? 0m : a.PreviousCost,
-                PreviousSalesCount = a == null ? 0 : a.PreviousSalesCount,
+                CurrentRevenue = a.CurrentRevenue ?? 0m,
+                CurrentCost = a.CurrentCost ?? 0m,
+                CurrentSalesCount = a.CurrentSalesCount ?? 0,
+                PreviousRevenue = a.PreviousRevenue ?? 0m,
+                PreviousCost = a.PreviousCost ?? 0m,
+                PreviousSalesCount = a.PreviousSalesCount ?? 0,
             };
 
         return await query.ToListAsync(cancellationToken).ConfigureAwait(false);

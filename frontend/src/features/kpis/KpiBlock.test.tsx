@@ -30,7 +30,7 @@ describe('KpiBlock — Возвраты change colour (T9 #9)', () => {
 
   it('renders a rising refund rate as red', async () => {
     server.use(
-      http.get('*/api/dashboard/kpis', () =>
+      http.get('/api/dashboard/kpis', () =>
         HttpResponse.json({
           ...kpiResponse,
           refunds: {
@@ -50,7 +50,7 @@ describe('KpiBlock — Возвраты change colour (T9 #9)', () => {
 
 describe('KpiBlock — empty period (T9 #8)', () => {
   it('shows «—» values and «нет данных для сравнения» when everything is null (D6)', async () => {
-    server.use(http.get('*/api/dashboard/kpis', () => HttpResponse.json(kpiEmptyResponse)))
+    server.use(http.get('/api/dashboard/kpis', () => HttpResponse.json(kpiEmptyResponse)))
 
     renderWithProviders(<KpiBlock period={PERIOD} />)
 

@@ -27,9 +27,9 @@ export function resetRequests(): void {
 }
 
 /**
- * The most recent request whose path ends with `path`, or undefined if none was made. Matching by
- * suffix keeps tests referencing the clean endpoint (`/api/dashboard/...`) regardless of the base
- * URL prefix the client prepends.
+ * The most recent request whose path ends with `path`, or undefined if none was made. The client
+ * bases requests on the page origin, so the recorded pathname is exactly the schema endpoint
+ * (`/api/dashboard/...`); suffix matching lets tests pass that clean endpoint directly.
  */
 export function lastRequest(path: string): RecordedRequest | undefined {
   return requests.findLast((r) => r.path.endsWith(path))
@@ -42,39 +42,41 @@ function record(url: string): URLSearchParams {
 }
 
 /**
- * Default happy-path handlers for every dashboard endpoint (T9). Patterns are host-agnostic (`*`)
- * so they match whatever origin jsdom runs under. Tests override individual endpoints with
- * `server.use(...)` for delays, errors, and empty periods.
+ * Default happy-path handlers for every dashboard endpoint (T9). Each pattern is the exact schema
+ * path — no wildcard — so a client that mangles the path (e.g. a doubled /api/api prefix) misses
+ * every handler and, with `onUnhandledRequest: 'error'`, fails the test instead of passing on a
+ * lenient match. Tests override individual endpoints with `server.use(...)` for delays, errors,
+ * and empty periods.
  */
 export const handlers = [
-  http.get('*/api/dashboard/kpis', ({ request }) => {
+  http.get('/api/dashboard/kpis', ({ request }) => {
     record(request.url)
     return HttpResponse.json(kpiResponse)
   }),
 
-  http.get('*/api/dashboard/managers/ranking', ({ request }) => {
+  http.get('/api/dashboard/managers/ranking', ({ request }) => {
     const params = record(request.url)
     const body =
       params.get('rankBy') === 'AverageCheck' ? rankingByAverageCheckResponse : rankingResponse
     return HttpResponse.json(body)
   }),
 
-  http.get('*/api/dashboard/timeseries', ({ request }) => {
+  http.get('/api/dashboard/timeseries', ({ request }) => {
     record(request.url)
     return HttpResponse.json(timeseriesResponse)
   }),
 
-  http.get('*/api/dashboard/categories', ({ request }) => {
+  http.get('/api/dashboard/categories', ({ request }) => {
     record(request.url)
     return HttpResponse.json(categoriesResponse)
   }),
 
-  http.get('*/api/dashboard/products/top', ({ request }) => {
+  http.get('/api/dashboard/products/top', ({ request }) => {
     record(request.url)
     return HttpResponse.json(topProductsResponse)
   }),
 
-  http.get('*/api/dashboard/sales/recent', ({ request }) => {
+  http.get('/api/dashboard/sales/recent', ({ request }) => {
     const params = record(request.url)
     const body = params.get('cursor') === 'cursor-page-2' ? recentSalesPage2 : recentSalesPage1
     return HttpResponse.json(body)
