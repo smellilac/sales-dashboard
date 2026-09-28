@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { resolvePreset } from './presets'
 import type { ActivePeriod, PresetId } from './types'
-import { parsePeriod, serializePeriod } from './url'
+import { parsePeriod } from './url'
 
 /**
  * Single source of truth for the selected period, backed by the URL — no router, no store (D3).
@@ -21,7 +21,18 @@ export function usePeriod() {
   }, [])
 
   const navigate = useCallback((next: ActivePeriod) => {
-    window.history.pushState(null, '', serializePeriod(next))
+    // Merge into the current query string so unrelated params (e.g. ?rankBy) survive.
+    const params = new URLSearchParams(window.location.search)
+    params.delete('period')
+    params.delete('from')
+    params.delete('to')
+    if (next.preset === 'custom') {
+      params.set('from', next.from)
+      params.set('to', next.to)
+    } else {
+      params.set('period', next.preset)
+    }
+    window.history.pushState(null, '', `?${params.toString()}`)
     setPeriod(next)
   }, [])
 

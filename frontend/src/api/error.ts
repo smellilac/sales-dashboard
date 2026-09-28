@@ -13,6 +13,16 @@ export interface ApiError {
   code?: string
 }
 
+/**
+ * Every query hook throws ApiError, so register it as the default error type — `query.error` is
+ * then typed ApiError everywhere without repeating a generic on each hook.
+ */
+declare module '@tanstack/react-query' {
+  interface Register {
+    defaultError: ApiError
+  }
+}
+
 /** A ProblemDetails body may carry a domain `code` (e.g. period.invalid) beyond the RFC fields. */
 type ProblemBody = ProblemDetails & { code?: string }
 

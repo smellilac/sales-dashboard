@@ -26,7 +26,7 @@ Timebox — 8 часов. Запуск одной командой: `docker comp
 
 - Backend: .NET 10, C#, ASP.NET Core Minimal APIs, EF Core + Npgsql, Dapper
 - Data: PostgreSQL (поднимается как сервис в docker-compose проекта)
-- Frontend: React + TypeScript (детали — open)
+- Frontend: React + TypeScript, детали — раздел «Frontend (settled, D14)»
 - Infrastructure: Docker Compose
 
 ## Инварианты (settled)
@@ -114,6 +114,18 @@ Timebox — 8 часов. Запуск одной командой: `docker comp
 - Запускается, только если таблицы пусты.
 - Сложные edge cases (равенство менеджеров, продажа в полночь) проверяются тестами на ручных данных.
 
+## Frontend (settled, D14)
+
+- Vite, React, TypeScript (`strict`), TanStack Query v5, Tailwind v4 + shadcn/ui, Recharts,
+  `motion` (преемник Framer Motion), `date-fns` + `@date-fns/tz`.
+- Период в URL, без store: `?period=7d` для пресета, `?from&to` для произвольного диапазона.
+  Пресеты считаются в бизнес-часовом поясе, не в поясе браузера.
+- API-клиент: `openapi-typescript` (типы из `backend/openapi/`, коммитятся) + `openapi-fetch`.
+- nginx отдаёт frontend и проксирует `/api` — без CORS. Frontend на порту 3000.
+- API в compose имеет healthcheck на `/health/ready` (curl в runtime-образе); frontend
+  стартует после `service_healthy`.
+- Интерфейс на русском, desktop 1440×900, светлая тема.
+
 ## Draft
 
 - **C2** — отдельный one-shot контейнер для миграций (вариант для production).
@@ -129,7 +141,6 @@ Timebox — 8 часов. Запуск одной командой: `docker comp
 
 ## Open
 
-- **D14** — frontend-стек и дизайн.
 - **D15** — состав тестов.
 - **AI_PROMPTS.md** — пользователь займётся отдельно.
 
