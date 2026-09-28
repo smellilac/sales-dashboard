@@ -4,7 +4,7 @@ import { useTimeseries } from '@/api/queries/useTimeseries'
 import { DashboardBlock } from '@/components/block/DashboardBlock'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { formatBucketTick, type Granularity } from '@/lib/format'
+import type { Granularity } from '@/lib/format'
 import type { ActivePeriod } from '@/period/types'
 
 import { TIMESERIES_MODE_LABELS, type TimeseriesMode } from './mode'
@@ -23,7 +23,6 @@ export function TimeseriesBlock({
 
   const granularity = (data?.granularity ?? 'Day') as Granularity
   const points: ChartPoint[] = (data?.points ?? []).map((p) => ({
-    label: formatBucketTick(p.bucketStart, p.bucketEnd, granularity),
     bucketStart: p.bucketStart,
     bucketEnd: p.bucketEnd,
     revenue: Number(p.revenue),
@@ -60,7 +59,7 @@ export function TimeseriesBlock({
       }
     >
       <div className="relative">
-        <TimeseriesChart data={points} mode={mode} />
+        <TimeseriesChart data={points} mode={mode} granularity={granularity} />
         {allZero ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="rounded-md bg-background/80 px-3 py-1.5 text-sm text-muted-foreground">

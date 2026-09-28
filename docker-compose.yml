@@ -30,6 +30,7 @@ services:
     environment:
       ConnectionStrings__Sales: "Host=postgres;Port=5432;Database=sales;Username=sales;Password=sales"
       Database__ApplyMigrationsOnStartup: "true"
+      Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore: "Warning"
     healthcheck:
       # curl is installed in the runtime image (see backend/Dockerfile). Readiness = DB reachable.
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/ready"]
