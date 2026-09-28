@@ -1,11 +1,14 @@
 import { RotateCw } from 'lucide-react'
+import { motion } from 'motion/react'
 
 import { useKpis } from '@/api/queries/useKpis'
+import { AnimatedNumber } from '@/components/AnimatedNumber'
 import { ChangeIndicator } from '@/components/ChangeIndicator'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCount, formatMoney, formatPercent } from '@/lib/format'
+import { kpiCard, kpiContainer } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { ActivePeriod } from '@/period/types'
 
@@ -56,43 +59,64 @@ export function KpiBlock({ period }: { period: ActivePeriod }) {
   }
 
   return (
-    <div className={cn(ROW, 'transition-opacity', isFetching && 'pointer-events-none opacity-60')}>
-      <KpiTile
-        title="Выручка"
-        value={formatMoney(data.revenue.current)}
-        footer={<ChangeIndicator value={data.revenue.change} />}
-      />
-      <KpiTile
-        title="Валовая прибыль"
-        value={formatMoney(data.grossProfit.current)}
-        footer={<ChangeIndicator value={data.grossProfit.change} />}
-      />
-      <KpiTile
-        title="Маржа"
-        value={formatPercent(data.margin.current)}
-        footer={<ChangeIndicator value={data.margin.changePoints} kind="points" />}
-      />
-      <KpiTile
-        title="Продажи"
-        value={formatCount(data.salesCount.current)}
-        footer={<ChangeIndicator value={data.salesCount.change} />}
-      />
-      <KpiTile
-        title="Средний чек"
-        value={formatMoney(data.averageCheck.current)}
-        footer={<ChangeIndicator value={data.averageCheck.change} />}
-      />
-      <KpiTile
-        title="Возвраты"
-        value={formatMoney(data.refunds.amount.current)}
-        footer={
-          <div className="space-y-0.5">
-            <p className="text-muted-foreground">доля {formatPercent(data.refunds.rate.current)}</p>
-            <ChangeIndicator value={data.refunds.rate.changePoints} kind="points" invert />
-          </div>
-        }
-      />
-      <BestManagerTile best={data.bestManager} />
-    </div>
+    <motion.div
+      className={cn(ROW, 'transition-opacity', isFetching && 'pointer-events-none opacity-60')}
+      variants={kpiContainer}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Выручка"
+          value={<AnimatedNumber value={data.revenue.current} format={formatMoney} />}
+          footer={<ChangeIndicator value={data.revenue.change} />}
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Валовая прибыль"
+          value={<AnimatedNumber value={data.grossProfit.current} format={formatMoney} />}
+          footer={<ChangeIndicator value={data.grossProfit.change} />}
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Маржа"
+          value={<AnimatedNumber value={data.margin.current} format={formatPercent} />}
+          footer={<ChangeIndicator value={data.margin.changePoints} kind="points" />}
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Продажи"
+          value={<AnimatedNumber value={data.salesCount.current} format={formatCount} />}
+          footer={<ChangeIndicator value={data.salesCount.change} />}
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Средний чек"
+          value={<AnimatedNumber value={data.averageCheck.current} format={formatMoney} />}
+          footer={<ChangeIndicator value={data.averageCheck.change} />}
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <KpiTile
+          title="Возвраты"
+          value={<AnimatedNumber value={data.refunds.amount.current} format={formatMoney} />}
+          footer={
+            <div className="space-y-0.5">
+              <p className="text-muted-foreground">
+                доля {formatPercent(data.refunds.rate.current)}
+              </p>
+              <ChangeIndicator value={data.refunds.rate.changePoints} kind="points" invert />
+            </div>
+          }
+        />
+      </motion.div>
+      <motion.div variants={kpiCard}>
+        <BestManagerTile best={data.bestManager} />
+      </motion.div>
+    </motion.div>
   )
 }

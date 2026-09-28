@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
 import { Loader2, RotateCw } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 
 import type { ApiError } from '@/api/error'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { fade } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 /** Query state a dashboard block can be in, mapped from a TanStack Query result by each feature. */
@@ -62,19 +64,29 @@ export function DashboardBlock({
         {showControls ? headerRight : null}
       </CardHeader>
       <CardContent className="flex-1">
-        {status === 'pending' ? (
-          skeleton
-        ) : status === 'error' ? (
-          <BlockError error={error} onRetry={onRetry} />
-        ) : isEmpty ? (
-          <div className="flex min-h-24 items-center justify-center text-center text-sm text-muted-foreground">
-            {empty}
-          </div>
-        ) : (
-          <div className={cn('transition-opacity', isFetching && 'pointer-events-none opacity-60')}>
-            {children}
-          </div>
-        )}
+        {/* Short fade between the four states; skeleton height matches content, so no layout shift. */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={status} variants={fade} initial="hidden" animate="show" exit="hidden">
+            {status === 'pending' ? (
+              skeleton
+            ) : status === 'error' ? (
+              <BlockError error={error} onRetry={onRetry} />
+            ) : isEmpty ? (
+              <div className="flex min-h-24 items-center justify-center text-center text-sm text-muted-foreground">
+                {empty}
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  'transition-opacity',
+                  isFetching && 'pointer-events-none opacity-60',
+                )}
+              >
+                {children}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </CardContent>
     </Card>
   )
