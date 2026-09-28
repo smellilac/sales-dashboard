@@ -25,6 +25,12 @@ const money = new Intl.NumberFormat('ru-RU', {
   maximumFractionDigits: 0,
 })
 
+const compactMoney = new Intl.NumberFormat('ru-RU', {
+  notation: 'compact',
+  compactDisplay: 'short',
+  maximumFractionDigits: 1,
+})
+
 const percent = new Intl.NumberFormat('ru-RU', {
   style: 'percent',
   maximumFractionDigits: 1,
@@ -45,6 +51,12 @@ const points = new Intl.NumberFormat('ru-RU', {
 export function formatMoney(value: ApiNumber): string {
   const n = toNumber(value)
   return n == null ? EM_DASH : money.format(n)
+}
+
+/** Rubles in compact form for chart axes, e.g. «1,2 млн»; `—` when null. */
+export function formatCompactMoney(value: ApiNumber): string {
+  const n = toNumber(value)
+  return n == null ? EM_DASH : `${compactMoney.format(n)} ₽`
 }
 
 /** A fraction (0.22) as a percent; `—` when null (D6). */
@@ -79,4 +91,40 @@ export function formatDay(day: string): string {
 /** A period's inclusive bounds as «from – to» in the business zone. */
 export function formatDayRange(from: string, to: string): string {
   return `${formatDay(from)} – ${formatDay(to)}`
+}
+
+/** An API `date-time` (UTC ISO) as a business-zone date and time, e.g. «5 сент. 14:30». */
+export function formatDateTime(soldAt: string): string {
+  return format(new TZDate(soldAt, BUSINESS_TIME_ZONE), 'd MMM HH:mm', { locale: ru })
+}
+
+/** Timeseries bucket granularity chosen by the server (TIMESERIES). */
+export type Granularity = 'Day' | 'Week' | 'Month'
+
+/**
+ * Short axis tick for a timeseries bucket by granularity (TIMESERIES): day «24 сент.»,
+ * week «22–28 сент.», month «сент. 2026». Bounds are inclusive `yyyy-MM-dd` days.
+ */
+export function formatBucketTick(
+  bucketStart: string,
+  bucketEnd: string,
+  granularity: Granularity,
+): string {
+  switch (granularity) {
+    case 'Day':
+      return formatDay(bucketStart)
+    case 'Week':
+      return formatDayRange(bucketStart, bucketEnd)
+    case 'Month':
+      return format(new TZDate(`${bucketStart}T00:00:00`, BUSINESS_TIME_ZONE), 'LLL yyyy', {
+        locale: ru,
+      })
+  }
+}
+
+/** Full inclusive bucket range for the timeseries tooltip. */
+export function formatBucketRange(bucketStart: string, bucketEnd: string): string {
+  return bucketStart === bucketEnd
+    ? formatDay(bucketStart)
+    : formatDayRange(bucketStart, bucketEnd)
 }
