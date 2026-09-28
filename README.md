@@ -53,12 +53,11 @@ docker compose up --build
 | Что | URL |
 |---|---|
 | Дашборд | http://localhost:3000 |
-| API | http://localhost:8080 |
-| Scalar (интерактивная документация API) | http://localhost:8080/scalar |
-| OpenAPI JSON | http://localhost:8080/openapi/v1.json |
+| Scalar (интерактивная документация API) | http://localhost:3000/scalar |
+| OpenAPI JSON | http://localhost:3000/openapi/v1.json |
 
-Scalar и OpenAPI отдаются напрямую с порта API (8080); nginx на порту 3000 проксирует на backend
-только пути `/api/*`.
+Порт API наружу не публикуется: frontend, Scalar и OpenAPI-документ доступны через nginx на порту
+3000, который проксирует на backend пути `/api/*`, `/scalar` и `/openapi/*`.
 
 **Сколько ждать при первом запуске.** Первая сборка образов занимает несколько минут (скачивание
 базовых образов, `npm ci` + Vite-сборка frontend, `dotnet publish` backend). После сборки API при
@@ -84,9 +83,21 @@ docker compose down -v
 
 ## 3. Если не запускается
 
-- **Заняты порты 3000 или 8080.** Compose публикует наружу только их (порт PostgreSQL наружу не
-  выставлен). Если порт занят другим процессом — освободите его или измените левую часть проброса
-  в `docker-compose.yml` (например, `"3001:80"`), затем `docker compose up --build`.
+- **Занят порт 3000.** Наружу публикуется только он (порты API и PostgreSQL наружу не выставлены).
+  Если 3000 занят другим процессом — запустите на другом порту через переменную `FRONTEND_PORT`:
+
+  ```bash
+  FRONTEND_PORT=3001 docker compose up --build
+  ```
+
+  PowerShell:
+
+  ```powershell
+  $env:FRONTEND_PORT=3001; docker compose up --build
+  ```
+
+  Дашборд и Scalar тогда открываются на выбранном порту (например, `http://localhost:3001` и
+  `http://localhost:3001/scalar`).
 - **Windows и переводы строк (CRLF).** Если репозиторий клонирован с автоконвертацией `core.autocrlf`,
   shell-скрипты и конфиги могут получить `\r\n` и ломаться внутри Linux-контейнеров. Клонируйте с
   `git config core.autocrlf false` или конвертируйте файлы в LF.
@@ -98,10 +109,11 @@ docker compose down -v
 
 ## 4. Архитектура
 
-**Связь сервисов:** браузер → **frontend (nginx, порт 3000)** → проксирует `/api/*` →
-**API (.NET, порт 8080)** → **PostgreSQL**. Frontend и API живут на одном origin (nginx проксирует
-API), поэтому CORS не нужен. API зависит от готовности PostgreSQL (`depends_on: service_healthy`),
-frontend — от готовности API. PostgreSQL наружу не публикуется.
+**Связь сервисов:** браузер → **frontend (nginx, порт 3000)** → проксирует `/api/*`, `/scalar` и
+`/openapi/*` → **API (.NET, порт 8080 внутри сети)** → **PostgreSQL**. Frontend и API живут на одном
+origin (nginx проксирует API), поэтому CORS не нужен. API зависит от готовности PostgreSQL
+(`depends_on: service_healthy`), frontend — от готовности API. Наружу публикуется только порт
+frontend; порты API и PostgreSQL доступны только внутри сети compose.
 
 **Vertical Slice Architecture.** Backend — один проект, папка на каждый блок дашборда
 (`Features/Kpi`, `Features/ManagerRanking`, `Features/Timeseries`, `Features/Categories`,
@@ -122,7 +134,7 @@ sales-dashboard/
 ├── frontend/
 │   ├── src/            # React + TypeScript (api/, components/, features/, period/, test/)
 │   ├── public/
-│   ├── nginx.conf      # отдаёт статику, проксирует /api → api:8080
+│   ├── nginx.conf      # отдаёт статику, проксирует /api, /scalar, /openapi → api:8080
 │   └── Dockerfile
 ├── docs/
 │   └── decisions.md    # журнал решений (почему сделано именно так)
