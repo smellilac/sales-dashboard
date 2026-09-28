@@ -528,6 +528,29 @@ seeded-генератора — пересоздание даёт те же Id (
 
 ---
 
+# Frontend
+
+## D14 — Стек frontend
+**Статус:** settled · 2026-09-28
+
+**Решение:** Vite, React, TypeScript, TanStack Query, Tailwind + shadcn/ui, Recharts,
+`motion`, `date-fns` + `@date-fns/tz`, `openapi-typescript` + `openapi-fetch`.
+Период в URL. nginx отдаёт статику и проксирует `/api`.
+
+**Почему:**
+- Период в URL вместо Zustand — нет лишнего store, ссылку на период можно переслать.
+  В URL хранится пресет (`?period=7d`), поэтому ссылка, открытая завтра, покажет
+  завтрашние 7 дней; произвольный диапазон — `?from&to`.
+- Пресеты в бизнес-поясе — «сегодня» одинаково для всех, независимо от пояса браузера.
+- nginx-прокси — frontend и API на одном origin, CORS не нужен.
+- `openapi-fetch` — типизированные вызовы на сгенерированных типах, контракт не расходится.
+- `motion` — новое имя пакета Framer Motion; `@date-fns/tz` — официальный пакет поясов
+  для date-fns v4.
+- Healthcheck API с curl — frontend не стартует, пока API применяет миграции и seed;
+  цена — небольшой рост образа.
+
+---
+
 # Отклонено
 
 ## VIEW — Представление PostgreSQL с правилами
